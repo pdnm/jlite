@@ -1,0 +1,137 @@
+package parser.gen;
+import java_cup.runtime.*;
+import java.util.*;
+import ast.*;
+
+terminal SEMI, COMMA, DOT, LPAR, RPAR, LBRACE, RBRACE;
+terminal IF, ELSE, WHILE, RETURN, CLASS, NEW, THIS;
+terminal NEG, UMINUS, PLUS, MINUS, TIMES, DIVIDE, GT, LT, GE, LE, ASSIGN, EQ, NEQ, OR, AND;
+terminal Type TYPE;
+terminal Identifier ID;
+terminal String STRING;
+terminal Integer INTEGER;
+terminal Boolean BOOL;
+terminal NULL;
+
+nonterminal Program program;
+nonterminal ClassDecl classdecl;
+nonterminal List<ClassDecl> classlist;
+nonterminal VarDecl vardecl;
+nonterminal List<VarDecl> vardecls;
+nonterminal MdDecl mddecl;
+nonterminal List<MdDecl> mddecls;
+nonterminal FmlParam fmlparam;
+nonterminal List<FmlParam> fmlparams;
+nonterminal List<FmlParam> fmlparam1;
+nonterminal Stmt stmt;
+nonterminal List<Stmt> stmts;
+nonterminal List<Expr> args;
+nonterminal List<Expr> args1;
+nonterminal Expr expr;
+nonterminal Expr bexpr;
+nonterminal Expr aexpr;
+nonterminal Expr rexpr;
+nonterminal Expr sexpr;
+nonterminal Expr conj;
+nonterminal Expr term;
+nonterminal Expr ftr;
+nonterminal Expr atom;
+
+//precedence left OR;
+//precedence left AND;
+//precedence left GT, LT, GE, LE, EQ, NEQ;
+//precedence left PLUS, MINUS;
+//precedence left TIMES, DIVIDE;
+//precedence left UMINUS, NEG;
+
+program         ::= classlist:cl classdecl:m        {: cl.add(m); RESULT = new Program(cl); :}
+    ;
+classlist       ::= classlist:cl classdecl:d        {: cl.add(d); RESULT = cl; :}
+    |                                               {: RESULT = new LinkedList<ClassDecl>(); :}
+    ;
+classdecl       ::= CLASS TYPE:t LBRACE
+                    vardecls:vars mddecls:mds
+                    RBRACE                          {: Collections.reverse(mds); RESULT = new ClassDecl(t, vars, mds); :}
+    ;
+vardecls        ::= vardecls: vars vardecl:var      {: vars.add(var); RESULT = vars; :}
+    |                                               {: RESULT = new LinkedList<>(); :}
+    ;
+vardecl         ::= TYPE:t ID:id SEMI               {: RESULT = new VarDecl(t, (id)); :}
+    ;
+mddecls         ::= mddecl:md mddecls:mds           {: mds.add(md); RESULT = mds; :}
+    |                                               {: RESULT = new ArrayList<>(); :}
+    ;
+mddecl          ::= TYPE:t ID:id LPAR
+                    fmlparams:params RPAR
+                    LBRACE vardecls:vars
+                    stmts:stmts RBRACE              {: RESULT = new MdDecl(t, (id), params, vars, stmts); :}
+    ;
+fmlparams       ::= fmlparam1:e                     {: RESULT = e; :}
+    |                                               {: RESULT = new ArrayList<>(); :}
+    ;
+fmlparam1       ::= fmlparams:ps COMMA fmlparam:p   {: ps.add(p); RESULT = ps; :}
+    |               fmlparam:p                      {: RESULT = new ArrayList<>(); :}
+    ;
+fmlparam        ::= TYPE:t ID:id                    {: RESULT = new FmlParam(t, (id)); :}
+    ;
+stmts           ::= stmts:ss stmt:s                 {: ss.add(s); RESULT = ss; :}
+    |                                               {: RESULT = new ArrayList<>(); :}
+    ;
+stmt            ::= IF LPAR expr:e RPAR
+                    LBRACE stmts:then RBRACE
+                    ELSE LBRACE stmts:alt RBRACE    {: RESULT = Stmt.ifStmt(e, then, alt); :}
+    |               WHILE LPAR expr:e RPAR
+                    LBRACE stmts:ss RBRACE          {: RESULT = Stmt.whileStmt(e, ss); :}
+    |               atom:a LPAR args:args RPAR SEMI {: RESULT = Stmt.fnCall(a, args); :}
+    |               atom:a ASSIGN expr:e SEMI       {: RESULT = Stmt.assignment(a, e); :}
+    |               RETURN expr:e SEMI              {: RESULT = Stmt.returnStmt(e); :}
+    |               RETURN SEMI                     {: RESULT = Stmt.returnStmt(); :}
+    ;
+args            ::= args1:e                         {: RESULT = e; :}
+    |                                               {: RESULT = new ArrayList<>(); :}
+    ;
+args1           ::= args1:args COMMA expr:arg       {: args.add(arg); RESULT = args; :}
+    |               expr:arg                        {: RESULT = new ArrayList<>(); RESULT.add(arg); :}
+    ;
+expr            ::= bexpr:e                         {: RESULT = e; :}
+    |               sexpr:e                         {: RESULT = e; :}
+    ;
+bexpr           ::= bexpr:b OR conj:c               {: RESULT = Expr.binOp(Operator.OR, b, c); :}
+    |               conj:e                          {: RESULT = e; :}
+    ;
+conj            ::= conj:c AND rexpr:r              {: RESULT = Expr.binOp(Operator.AND, c, r); :}
+    |               rexpr:e                         {: RESULT = e; :}
+    ;
+rexpr           ::= aexpr:a1 LT aexpr:a2            {: RESULT = Expr.binOp(Operator.LT, a1, a2); :}
+    |               aexpr:a1 GT aexpr:a2            {: RESULT = Expr.binOp(Operator.GT, a1, a2); :}
+    |               aexpr:a1 LE aexpr:a2            {: RESULT = Expr.binOp(Operator.LE, a1, a2); :}
+    |               aexpr:a1 GE aexpr:a2            {: RESULT = Expr.binOp(Operator.GE, a1, a2); :}
+    |               aexpr:a1 EQ aexpr:a2            {: RESULT = Expr.binOp(Operator.EQ, a1, a2); :}
+    |               aexpr:a1 NEQ aexpr:a2           {: RESULT = Expr.binOp(Operator.NEQ, a1, a2); :}
+    |               aexpr:a                         {: RESULT = a; :}
+    ;
+aexpr           ::= aexpr:l PLUS term:r             {: RESULT = Expr.binOp(Operator.ADD, l, r); :}
+    |               aexpr:l MINUS term:r            {: RESULT = Expr.binOp(Operator.SUB, l, r); :}
+    |               term:e                          {: RESULT = e; :}
+    ;
+term            ::= term:l TIMES ftr:r              {: RESULT = Expr.binOp(Operator.MUL, l, r); :}
+    |               term:l DIVIDE ftr:r             {: RESULT = Expr.binOp(Operator.DIV, l, r); :}
+    |               ftr:e                           {: RESULT = e; :}
+    ;
+ftr             ::= INTEGER:i                       {: RESULT = Expr.intLit(i); :}
+    |               BOOL:b                          {: RESULT = Expr.boolLit(b); :}
+    |               MINUS ftr:e                    {: RESULT = Expr.unOp(Operator.UMINUS, e); :}
+    |               NEG ftr:e                       {: RESULT = Expr.unOp(Operator.NEG, e); :}
+    |               atom:a                          {: RESULT = a; :}
+    ;
+sexpr           ::= STRING:s                        {: RESULT = Expr.stringLit(s); :}
+    ;
+atom            ::= atom:a DOT ID:i                 {: RESULT = Expr.path(a, (i)); :}
+    |               atom:a LPAR args:args RPAR      {: RESULT = Expr.fnCall(a, args); :}
+    |               THIS                            {: RESULT = Expr.thisExpr(); :}
+    |               ID:i                            {: RESULT = Expr.idExpr((i)); :}
+    |               NEW TYPE:c LPAR RPAR           {: RESULT = Expr.newExpr((c)); :}
+    |               LPAR expr:e RPAR                {: RESULT = e; :}
+    |               NULL                            {: RESULT = Expr.nullExpr(); :}
+    ;
+

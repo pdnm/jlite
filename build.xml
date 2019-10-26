@@ -1,0 +1,37 @@
+<project    name="JLite" default ="compile" basedir=".">
+    <property name="cup"      location="src/main/cup"      />
+    <property name="jflex"    location="src/main/jflex"    />
+    <property name="src"    location="src/main"    />
+    <property name="parser"    location="src/main/parser/gen"    />
+    <property name="java"     location="src/java"     />
+    <property name="classes"  location="bin"          />
+    <property name="lib"      location="lib"          />
+    <property name="tools"    location="tools"        />
+
+    <taskdef name="jflex" classname="jflex.anttask.JFlexTask" classpath="${tools}/JFlex.jar"   />
+    <taskdef  name="cup"   classname="java_cup.anttask.CUPTask"  classpath="${tools}/java-cup-11b.jar"  />
+
+    <target name="generate">
+        <jflex file="${jflex}/scanner.flex" destdir="${src}" />
+        <cup srcfile="${cup}/parser.cup" destdir="${src}"
+             parser="Parser" interface="true" locations="false" />
+    </target>
+
+    <target name="generate parser">
+        <cup srcfile="${cup}/parser.cup" destdir="${src}"
+             parser="Parser" interface="true" locations="false" />
+    </target>
+
+    <path id="libraries"> <files includes="${lib}/java-cup-11b-runtime.jar" /> </path>
+
+    <target name="compile" depends="generate">
+        <javac srcdir="${java}" destdir="${classes}" > <classpath refid="libraries" /> </javac>
+    </target>
+
+    <target name="clean">
+        <delete file="${parser}/Parser.java" />
+        <delete file="${parser}/sym.java" />
+        <delete file="${parser}/Scanner.java" />
+        <delete dir="${classes}" />
+    </target>
+</project>
