@@ -1,6 +1,7 @@
 package ast;
 
 import java.util.List;
+import java.util.function.Function;
 
 public abstract class Stmt implements AstNode {
     public static class Assignment extends Stmt {
@@ -79,5 +80,32 @@ public abstract class Stmt implements AstNode {
     }
     public static WhileStmt whileStmt(Expr cond, List<Stmt> block) {
         return new WhileStmt(cond, block);
+    }
+
+    public <T> T process(Function<IfStmt, T> ifF,
+                         Function<WhileStmt, T> whileF,
+                         Function<FnCall, T> callF,
+                         Function<Assignment, T> asnF,
+                         Function<Return, T> retF,
+                         Function<ReturnVoid, T> retVoidF) {
+        if (this instanceof Stmt.IfStmt) {
+            var s = (Stmt.IfStmt) this;
+            return ifF.apply(s);
+        } else if (this instanceof Stmt.WhileStmt) {
+            var s = (Stmt.WhileStmt) this;
+            return whileF.apply(s);
+        } else if (this instanceof Stmt.FnCall) {
+            var s = (Stmt.FnCall) this;
+            return callF.apply(s);
+        } else if (this instanceof Stmt.Assignment) {
+            var s = (Stmt.Assignment) this;
+            return asnF.apply(s);
+        } else if (this instanceof Stmt.Return) {
+            var s = (Stmt.Return) this;
+            return retF.apply(s);
+        } else {
+            var s = (Stmt.ReturnVoid) this;
+            return retVoidF.apply(s);
+        }
     }
 }

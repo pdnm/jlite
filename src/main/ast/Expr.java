@@ -1,6 +1,7 @@
 package ast;
 
 import java.util.List;
+import java.util.function.Function;
 
 public abstract class Expr implements AstNode {
     public static class BinOp extends Expr {
@@ -111,4 +112,51 @@ public abstract class Expr implements AstNode {
         }
     }
     public static Null nullExpr() { return new Null(); }
+
+    public <T> T process(Function<BoolLit, T> boolLitTFunction,
+                         Function<IntLit, T> intLitTFunction,
+                         Function<StringLit, T> stringLitTFunction,
+                         Function<BinOp, T> binOpTFunction,
+                         Function<UnOp, T> unOpTFunction,
+                         Function<IdExpr, T> idExprTFunction,
+                         Function<NewExpr, T> newExprTFunction,
+                         Function<ThisExpr, T> thisExprTFunction,
+                         Function<Null, T> nullTFunction,
+                         Function<FnCall, T> fnCallTFunction,
+                         Function<Path, T> pathTFunction) {
+        if (this instanceof Expr.BoolLit) {
+            var e = (Expr.BoolLit) this;
+            return boolLitTFunction.apply(e);
+        } else if (this instanceof Expr.IntLit) {
+            var e = (Expr.IntLit) this;
+            return intLitTFunction.apply(e);
+        } else if (this instanceof Expr.StringLit) {
+            var e = (Expr.StringLit) this;
+            return stringLitTFunction.apply(e);
+        } else if (this instanceof Expr.BinOp) {
+            var e = (Expr.BinOp) this;
+            return binOpTFunction.apply(e);
+        } else if (this instanceof Expr.UnOp) {
+            var e = (Expr.UnOp) this;
+            return unOpTFunction.apply(e);
+        } else if (this instanceof Expr.IdExpr) {
+            var e = (Expr.IdExpr) this;
+            return idExprTFunction.apply(e);
+        } else if (this instanceof Expr.NewExpr) {
+            var e = (Expr.NewExpr) this;
+            return newExprTFunction.apply(e);
+        } else if (this instanceof Expr.ThisExpr) {
+            var e = (Expr.ThisExpr) this;
+            return thisExprTFunction.apply(e);
+        } else if (this instanceof Expr.Null) {
+            var e = (Expr.Null) this;
+            return nullTFunction.apply(e);
+        } else if (this instanceof Expr.FnCall) {
+            var e = (Expr.FnCall) this;
+            return fnCallTFunction.apply(e);
+        } else /*if (this instanceof Expr.Path)*/ {
+            var e = (Expr.Path) this;
+            return pathTFunction.apply(e);
+        }
+    }
 }
