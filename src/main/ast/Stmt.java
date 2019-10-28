@@ -47,6 +47,14 @@ public abstract class Stmt implements AstNode {
             this.fn = fn;
             this.args = args;
         }
+
+        @Override
+        public String toString() {
+            return "FnCall{" +
+                    "fn=" + fn +
+                    ", args=" + args +
+                    '}';
+        }
     }
     public static FnCall fnCall(Expr fn, List<Expr> args) {
         return new FnCall(fn, args);

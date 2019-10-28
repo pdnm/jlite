@@ -69,8 +69,8 @@ mddecl          ::= TYPE:t ID:id LPAR
 fmlparams       ::= fmlparam1:e                     {: RESULT = e; :}
     |                                               {: RESULT = new ArrayList<>(); :}
     ;
-fmlparam1       ::= fmlparams:ps COMMA fmlparam:p   {: ps.add(p); RESULT = ps; :}
-    |               fmlparam:p                      {: RESULT = new ArrayList<>(); :}
+fmlparam1       ::= fmlparam1:ps COMMA fmlparam:p   {: ps.add(p); RESULT = ps; :}
+    |               fmlparam:p                      {: RESULT = new ArrayList<>(); RESULT.add(p); :}
     ;
 fmlparam        ::= TYPE:t ID:id                    {: RESULT = new FmlParam(t, (id)); :}
     ;

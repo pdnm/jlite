@@ -54,7 +54,7 @@ public class ClassEnv {
                         List.of(new MdType(List.of(Context.intType), Context.voidType),
                                 new MdType(List.of(Context.stringType), Context.voidType),
                                 new MdType(List.of(Context.boolType), Context.voidType))),
-                entry("writeln",
+                entry("println",
                         List.of(new MdType(List.of(Context.intType), Context.voidType),
                                 new MdType(List.of(Context.stringType), Context.voidType),
                                 new MdType(List.of(Context.boolType), Context.voidType)))
@@ -67,7 +67,7 @@ public class ClassEnv {
                 : Optional.empty();
     }
 
-    Optional<Type> getMethodReturnType(Identifier name, List<Type> argTypes) {
+    public Optional<Type> getMethodReturnType(Identifier name, List<Type> argTypes) {
         if (!methods.containsKey(name.name))
             return Optional.empty();
         var overloadedList = methods.get(name.name);

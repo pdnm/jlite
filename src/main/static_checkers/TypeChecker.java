@@ -50,7 +50,7 @@ public class TypeChecker {
                 .map(varDecl -> typeNotDefined(varDecl.type))
                 .forEach(errors::add);
 
-        if (ListUtils.isNotUnique(mdDecl.vars, varDecl -> varDecl.type.name))
+        if (ListUtils.isNotUnique(mdDecl.vars, varDecl -> varDecl.name.name))
             errors.add(duplicatedVarNames(mdDecl));
 
         if (!errors.isEmpty()) return errors;
@@ -84,7 +84,7 @@ public class TypeChecker {
                 ifStmt ->
                         checkExpression(ctx, ifStmt.cond).flatMap(type -> {
                             if (!type.equals(Context.boolType))
-                                return singleError(nonBooleanCondition(ifStmt.cond));
+                                return singleError(nonBooleanCondition(ifStmt.cond, type));
                             var r1 = checkBlock(ctx, ifStmt.then);
                             var r2 = checkBlock(ctx, ifStmt.alt);
                             return flatten(map2(r1, r2, (t1, t2) ->
@@ -93,8 +93,8 @@ public class TypeChecker {
                 ,
                 whileStmt ->
                         checkExpression(ctx, whileStmt.cond).flatMap(type -> {
-                            if (type.equals(Context.boolType))
-                                return singleError(nonBooleanCondition(whileStmt.cond));
+                            if (!type.equals(Context.boolType))
+                                return singleError(nonBooleanCondition(whileStmt.cond, type));
                             return checkBlock(ctx, whileStmt.block);
                         })
                 ,
@@ -180,7 +180,7 @@ public class TypeChecker {
     }
 
     private static <T> Result<T, List<CompileError>> singleError(CompileError e) {
-        return singleError(e);
+        return error(List.of(e));
     }
 
     private static Result<Type, List<CompileError>> ok(Type type) {

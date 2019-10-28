@@ -87,13 +87,9 @@ StringLiteral = 0 | [1-9][0-9]*
   {IntegerLiteral}            { return symbol(sym.INTEGER, Integer.parseInt(yytext())); }
   \"                             { string.setLength(0); yybegin(STRING); }
 
-  "true"                         { return symbol(BOOLEAN, true); }
-  "false"                        { return symbol(BOOLEAN, false); }
+  "true"                         { return symbol(sym.BOOL, true); }
+  "false"                        { return symbol(sym.BOOL, false); }
 
-  /* operators */
-  "="                            { return symbol(sym.EQ); }
-  "=="                           { return symbol(sym.EQEQ); }
-  "+"                            { return symbol(sym.PLUS); }
 
   /* comments */
   {Comment}                      { /* ignore */ }

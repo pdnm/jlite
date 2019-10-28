@@ -49,11 +49,16 @@ class ParserDriverTest {
 
     @Test
     void test1() {
-        prettyPrintingTest("e.j");
+        prettyPrintingTest("jlite_programs/e.j");
     }
 
     @Test
     void test2() {
-        prettyPrintingTest("e1.j");
+        prettyPrintingTest("jlite_programs/e1.j");
+    }
+
+    @Test
+    void test3() {
+        prettyPrintingTest("jlite_programs/sample1.j");
     }
 }

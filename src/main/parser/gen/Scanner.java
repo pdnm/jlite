@@ -2,9 +2,8 @@
 
 package parser.gen;
 
-import ast.Identifier;
-import ast.Type;
 import java_cup.runtime.*;
+import ast.*;
 
 
 /**

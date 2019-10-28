@@ -46,6 +46,14 @@ public abstract class Expr implements AstNode {
         public final Expr left;
         public final Identifier id;
 
+        @Override
+        public String toString() {
+            return "Path{" +
+                    "left=" + left +
+                    ", id=" + id +
+                    '}';
+        }
+
         public Path(Expr left, Identifier id) {
             this.left = left;
             this.id = id;
@@ -58,6 +66,14 @@ public abstract class Expr implements AstNode {
     public static  class FnCall extends Expr {
         public final Expr fn;
         public final List<Expr> args;
+
+        @Override
+        public String toString() {
+            return "FnCall{" +
+                    "fn=" + fn +
+                    ", args=" + args +
+                    '}';
+        }
 
         public FnCall(Expr fn, List<Expr> args) {
             this.fn = fn;
@@ -96,6 +112,13 @@ public abstract class Expr implements AstNode {
     public static class IdExpr extends Expr {
         public final Identifier id;
 
+        @Override
+        public String toString() {
+            return "IdExpr{" +
+                    "id=" + id +
+                    '}';
+        }
+
         public IdExpr(Identifier id) {
             this.id = id;
         }
@@ -105,6 +128,7 @@ public abstract class Expr implements AstNode {
     public static class ThisExpr extends Expr {
         public ThisExpr() {
         }
+
     }
     public static ThisExpr thisExpr() { return new ThisExpr(); }
 

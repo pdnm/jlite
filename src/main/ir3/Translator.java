@@ -5,13 +5,14 @@ import ir3.ast.*;
 import static_checkers.ClassDesc;
 import static_checkers.CompileErrorExp;
 import static_checkers.Context;
+import static_checkers.MdType;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class Translator {
-    Program3 translate(Program program) {
+    public Program3 translate(Program program) {
         try {
             var classDesc = ClassDesc.initialize(program);
             Program3 result = null;
@@ -46,8 +47,11 @@ public class Translator {
         }
 
         var body = new MdBody3(vars, stmt3s);
-
-        return new CMtd3(Type3.fromType(md.rtype), Id3.fromId(md.name), FmlParam3.fromFmlParams(md.params), body);
+        return new CMtd3(
+                Type3.fromType(md.rtype),
+                ctx.getId3LocalFunction(md.name, new MdType(md).argTypes).get(),
+                FmlParam3.fromFmlParams(md.params),
+                body);
     }
 
     TranslatedStmt translate(Context3 ctx, LocalContext lctx, List<Stmt> inputStmts) {
@@ -132,15 +136,18 @@ public class Translator {
                         tmps.addAll(obj.tmps);
                         stmts.addAll(obj.stmt3s);
                         var objVar = lctx.generateTmpVar();
+                        tmps.add(new VarDecl3(Type3.fromType(path.left.getType()), objVar));
                         stmts.add(new Stmt3.Asn(objVar, obj.finalExpr));
                         args.add(objVar);
                     }
 
                     for (var arg : fnCall.args) {
-                        var argRes = translate(ctx, lctx, arg);
-                        tmps.addAll(argRes.tmps);
-                        stmts.addAll(argRes.stmt3s);
+                        var argCode = translate(ctx, lctx, arg);
+                        tmps.addAll(argCode.tmps);
+                        stmts.addAll(argCode.stmt3s);
                         var argVar = lctx.generateTmpVar();
+                        tmps.add(new VarDecl3(Type3.fromType(arg.getType()), argVar));
+                        stmts.add(new Stmt3.Asn(argVar, argCode.finalExpr));
                         args.add(argVar);
                     }
 
@@ -167,6 +174,7 @@ public class Translator {
                         tmps.addAll(rvalueCode.tmps);
                         stmts.addAll(rvalueCode.stmt3s);
                         var objVar = lctx.generateTmpVar();
+                        tmps.add(new VarDecl3(Type3.fromType(path.left.getType()), objVar));
                         stmts.add(new Stmt3.Asn(objVar, obj.finalExpr));
                         stmts.add(new Stmt3.FdAsn(objVar, Id3.fromId(path.id), rvalueCode.finalExpr));
                     }
@@ -177,6 +185,7 @@ public class Translator {
                     tmps.addAll(valueCode.tmps);
                     stmts.addAll(valueCode.stmt3s);
                     var tmpVar = lctx.generateTmpVar();
+                    tmps.add(new VarDecl3(Type3.fromType(aReturn.expr.getType()), tmpVar));
                     stmts.add(new Stmt3.Asn(tmpVar, valueCode.finalExpr));
                     stmts.add(new Stmt3.Return(tmpVar));
                     return true;
@@ -206,6 +215,8 @@ public class Translator {
                     stmts.addAll(rightCode.stmt3s);
                     var leftVar = lctx.generateTmpVar();
                     var rightVar = lctx.generateTmpVar();
+                    tmps.add(new VarDecl3(Type3.fromType(binOp.left.getType()), leftVar));
+                    tmps.add(new VarDecl3(Type3.fromType(binOp.right.getType()), rightVar));
                     stmts.add(new Stmt3.Asn(leftVar, leftCode.finalExpr));
                     stmts.add(new Stmt3.Asn(rightVar, rightCode.finalExpr));
                     return new Expr3.FnCall(new Id3(binOp.op.symbol), List.of(leftVar, rightVar));
@@ -215,6 +226,7 @@ public class Translator {
                     tmps.addAll(operandCode.tmps);
                     stmts.addAll(operandCode.stmt3s);
                     var operandVar = lctx.generateTmpVar();
+                    tmps.add(new VarDecl3(Type3.fromType(unOp.expr.getType()), operandVar));
                     stmts.add(new Stmt3.Asn(operandVar, operandCode.finalExpr));
                     return new Expr3.FnCall(new Id3(unOp.op.symbol), List.of(operandVar));
                 },
@@ -222,9 +234,7 @@ public class Translator {
                     if (idExpr.id.isFromLocalScope()) {
                         return new Expr3.IdExpr(Id3.fromId(idExpr.id));
                     } else {
-                        var tmpVar = lctx.generateTmpVar();
-                        stmts.add(new Stmt3.Asn(tmpVar, new Expr3.FieldAccess(Context3.thisId, Id3.fromId(idExpr.id))));
-                        return new Expr3.IdExpr(tmpVar);
+                        return new Expr3.FieldAccess(Context3.thisId, Id3.fromId(idExpr.id));
                     }
                 },
                 newExpr -> new Expr3.NewExpr(Type3.fromType(newExpr.className)),
@@ -250,15 +260,18 @@ public class Translator {
                         tmps.addAll(obj.tmps);
                         stmts.addAll(obj.stmt3s);
                         var objVar = lctx.generateTmpVar();
+                        tmps.add(new VarDecl3(Type3.fromType(path.left.getType()), objVar));
                         stmts.add(new Stmt3.Asn(objVar, obj.finalExpr));
                         args.add(objVar);
                     }
 
                     for (var arg : fnCall.args) {
-                        var argRes = translate(ctx, lctx, arg);
-                        tmps.addAll(argRes.tmps);
-                        stmts.addAll(argRes.stmt3s);
+                        var argCode = translate(ctx, lctx, arg);
+                        tmps.addAll(argCode.tmps);
+                        stmts.addAll(argCode.stmt3s);
                         var argVar = lctx.generateTmpVar();
+                        tmps.add(new VarDecl3(Type3.fromType(arg.getType()), argVar));
+                        stmts.add(new Stmt3.Asn(argVar, argCode.finalExpr));
                         args.add(argVar);
                     }
 
@@ -267,6 +280,7 @@ public class Translator {
                 path -> {
                     var leftCode = translate(ctx, lctx, path.left);
                     var tmpVar = lctx.generateTmpVar();
+                    tmps.add(new VarDecl3(Type3.fromType(path.left.getType()), tmpVar));
                     stmts.add(new Stmt3.Asn(tmpVar, leftCode.finalExpr));
                     return new Expr3.FieldAccess(tmpVar, Id3.fromId(path.id));
                 }

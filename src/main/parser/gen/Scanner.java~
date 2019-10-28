@@ -3,6 +3,7 @@
 package parser.gen;
 
 import java_cup.runtime.*;
+import ast.*;
 
 
 /**
@@ -10,7 +11,7 @@ import java_cup.runtime.*;
  * <a href="http://www.jflex.de/">JFlex</a> 1.7.0
  * from the specification file <tt>C:/Users/phand/workspace/projects/jlite/src/main/jflex/scanner.flex</tt>
  */
-public class Scanner implements sym, java_cup.runtime.Scanner {
+class Scanner implements sym, java_cup.runtime.Scanner {
 
   /** This character denotes the end of file */
   public static final int YYEOF = -1;
@@ -565,7 +566,7 @@ public class Scanner implements sym, java_cup.runtime.Scanner {
    *
    * @param   in  the java.io.Reader to read input from.
    */
-  public Scanner(java.io.Reader in) {
+  Scanner(java.io.Reader in) {
     this.zzReader = in;
   }
 
@@ -965,12 +966,12 @@ public class Scanner implements sym, java_cup.runtime.Scanner {
             // fall through
           case 47: break;
           case 5: 
-            { return symbol(sym.ID, yytext());
+            { return symbol(sym.ID, new Identifier(yytext()));
             } 
             // fall through
           case 48: break;
           case 6: 
-            { return symbol(sym.TYPE, yytext());
+            { return symbol(sym.TYPE, new Type(yytext()));
             } 
             // fall through
           case 49: break;

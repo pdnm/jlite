@@ -11,16 +11,21 @@ public class CompileError {
         this.astNode = astNode;
     }
 
+    @Override
+    public String toString() {
+        return message + "; Occurs at " + astNode;
+    }
+
     static CompileError typeNotDefined(Type type) {
-        return new CompileError("Type " + type + "is not defined", type);
+        return new CompileError("Type " + type + " is not defined", type);
     }
 
     static CompileError duplicatedVarNames(MdDecl md) {
         return new CompileError("Duplicated variable names in method", md);
     }
 
-    static CompileError nonBooleanCondition(Expr expr) {
-        return new CompileError("Condition type is not Bool", expr);
+    static CompileError nonBooleanCondition(Expr expr, Type t) {
+        return new CompileError("Expected condition type Bool, found " + t, expr);
     }
 
     static CompileError branchTypeMismatch(Stmt stmt) {
@@ -40,7 +45,7 @@ public class CompileError {
     }
 
     static CompileError identifierNotDef(Identifier id) {
-        return new CompileError("Identifier " + id + "is not defined", id);
+        return new CompileError("Identifier " + id + " is not defined", id);
     }
 
     static CompileError notLvalue(Expr e) {
