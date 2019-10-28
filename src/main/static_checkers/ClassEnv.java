@@ -8,8 +8,10 @@ import utils.ListUtils;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.*;
+import static java.util.Map.entry;
 
 public class ClassEnv {
     public final Type name;
@@ -46,6 +48,19 @@ public class ClassEnv {
         return new ClassEnv(clsDecl.name, fields, methodGroups);
     }
 
+    static ClassEnv pervasive() {
+        return new ClassEnv(new Type("Pervasive"), Map.of(), Map.ofEntries(
+                entry("readln",
+                        List.of(new MdType(List.of(Context.intType), Context.voidType),
+                                new MdType(List.of(Context.stringType), Context.voidType),
+                                new MdType(List.of(Context.boolType), Context.voidType))),
+                entry("writeln",
+                        List.of(new MdType(List.of(Context.intType), Context.voidType),
+                                new MdType(List.of(Context.stringType), Context.voidType),
+                                new MdType(List.of(Context.boolType), Context.voidType)))
+        ));
+    }
+
     Optional<Type> getFieldType(Identifier name) {
         return fields.containsKey(name.name)
                 ? Optional.of(fields.get(name.name))
@@ -63,5 +78,14 @@ public class ClassEnv {
                 })
                 .findFirst()
                 .map(mdType -> mdType.retType);
+    }
+
+    public int getMethodOverloadPosition(Identifier name, List<Type> argTypes) {
+        var overloadedList = methods.get(name.name);
+        return overloadedList
+                .stream()
+                .map(x -> x.argTypes)
+                .collect(Collectors.toList())
+                .indexOf(argTypes);
     }
 }

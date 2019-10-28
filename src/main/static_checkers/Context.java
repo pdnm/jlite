@@ -10,9 +10,10 @@ import static java.util.Map.entry;
 import static ast.Operator.*;
 
 public class Context {
-    final ClassDesc classDesc;
-    final TypeEnv typeEnv;
-    final ClassEnv localClass;
+    public final ClassDesc classDesc;
+    public final TypeEnv typeEnv;
+    public final ClassEnv pervasive;
+    public final ClassEnv localClass;
     private final Set<Type> classes;
     private final Set<Type> types;
 
@@ -67,17 +68,19 @@ public class Context {
         );
     }
 
-    public Context(ClassDesc classDesc, TypeEnv typeEnv, ClassEnv localClass, Set<Type> classes, Set<Type> types) {
+    public Context(ClassDesc classDesc, TypeEnv typeEnv, ClassEnv pervasive, ClassEnv localClass, Set<Type> classes, Set<Type> types) {
         this.classDesc = classDesc;
         this.typeEnv = typeEnv;
+        this.pervasive = pervasive;
         this.localClass = localClass;
         this.classes = classes;
         this.types = types;
     }
 
-    Context(ClassDesc classDesc, Type cls) {
+    public Context(ClassDesc classDesc, Type cls) {
         this.classDesc = classDesc;
         this.typeEnv = TypeEnv.emptyEnv();
+        this.pervasive = ClassEnv.pervasive();
         this.localClass = this.classDesc.getClassEnv(cls).get();
         this.classes = new HashSet<>(this.classDesc.getAllClassTypes());
         this.types = new HashSet<>(this.classDesc.getAllClassTypes());
@@ -85,11 +88,15 @@ public class Context {
     }
 
     Context extend(Identifier id, Type t) {
-        return new Context(classDesc, typeEnv.extend(id, t), localClass, classes, types);
+        return new Context(classDesc, typeEnv.extend(id, t), pervasive, localClass, classes, types);
     }
 
     Optional<Type> getType(Identifier id) {
         return typeEnv.getType(id).or(() -> localClass.getFieldType(id));
+    }
+
+    boolean isLocalVariable(Identifier id) {
+        return typeEnv.getType(id).isPresent();
     }
 
     private List<Type> primitiveTypes() {

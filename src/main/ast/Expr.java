@@ -4,6 +4,16 @@ import java.util.List;
 import java.util.function.Function;
 
 public abstract class Expr implements AstNode {
+    Type type;
+
+    public Type getType() {
+        return type;
+    }
+
+    public void setType(Type type) {
+        this.type = type;
+    }
+
     public static class BinOp extends Expr {
         public final Operator op;
         public final Expr left;

@@ -102,7 +102,9 @@ public class TypeChecker {
                         .flatMap(argTypes ->
                                 getMethod(ctx, fnCall, fnCall.fn, argTypes)),
                 assignment -> {
-                    var r1 = getLvalueType(ctx, assignment.lvalue);
+                    if (!isLvalue(assignment.lvalue))
+                        return singleError(notLvalue(assignment.lvalue));
+                    var r1 = checkExpression(ctx, assignment.lvalue);
                     var r2 = checkExpression(ctx, assignment.rvalue);
                     return flatten(map2(r1, r2, (t1, t2) ->
                             t1.equals(t2) ? success(Context.voidType) : singleError(assMismatch(assignment, t1, t2))));
@@ -112,26 +114,15 @@ public class TypeChecker {
         );
     }
 
-    static Result<Type, List<CompileError>> getLvalueType(Context ctx, Expr lvalue) {
-        if (lvalue instanceof Expr.IdExpr) {
-            var id = ((Expr.IdExpr) lvalue).id;
-            return ctx.getType(id)
-                    .map(Result::<Type, List<CompileError>> success)
-                    .orElseGet(() -> singleError(identifierNotDef(id)));
-        } else if (lvalue instanceof Expr.Path) {
-            var path = (Expr.Path) lvalue;
-            return checkExpression(ctx, path.left).flatMap(t ->
-                    ctx.classDesc.getClassEnv(t)
-                        .flatMap(cls -> cls.getFieldType(path.id))
-                        .map(TypeChecker::ok)
-                        .orElseGet(() -> singleError(identifierNotDef(path.id))));
-        } else return singleError(notLvalue(lvalue));
+    static boolean isLvalue(Expr lvalue) {
+        return lvalue instanceof Expr.IdExpr || lvalue instanceof Expr.Path;
     }
 
     static Result<Type, List<CompileError>> getMethod(Context ctx, AstNode call, Expr method, List<Type> argTypes) {
         if (method instanceof Expr.IdExpr) {
             Identifier md = ((Expr.IdExpr) method).id;
             return ctx.localClass.getMethodReturnType(md, argTypes)
+                    .or(() -> ctx.pervasive.getMethodReturnType(md, argTypes))
                     .map(TypeChecker::ok)
                     .orElseGet(() -> singleError(methodNotDefined(call)));
         } else if (method instanceof Expr.Path) {
@@ -145,7 +136,7 @@ public class TypeChecker {
     }
 
     private static Result<Type, List<CompileError>> checkExpression(Context ctx, Expr expr) {
-        return expr.process(
+        Result<Type, List<CompileError>> result = expr.process(
                 boolLit -> success(Context.boolType),
                 intLit -> success(Context.intType),
                 stringLit -> success(Context.stringType),
@@ -167,7 +158,10 @@ public class TypeChecker {
                                             : singleError(unOpTypeMismatch(
                                             expr, unOp.op, opType.operand, operandType)));
                 },
-                idExpr -> ctx.getType(idExpr.id).map(TypeChecker::ok).orElseGet(() -> singleError(identifierNotDef(idExpr.id))),
+                idExpr -> {
+                    idExpr.id.setFromLocalScope(ctx.isLocalVariable(idExpr.id));
+                    return ctx.getType(idExpr.id).map(TypeChecker::ok).orElseGet(() -> singleError(identifierNotDef(idExpr.id)));
+                },
                 newExpr -> ctx.isClass(newExpr.className) ? success(newExpr.className) : singleError(notClass(newExpr.className)),
                 thisExpr -> success(ctx.localClass.name),
                 aNull -> singleError(noNull(expr)),
@@ -181,6 +175,8 @@ public class TypeChecker {
                                     .map(TypeChecker::ok)
                                     .orElseGet(() -> singleError(fieldNotDefined(path.id, t))))
         );
+        result.consume(expr::setType, x -> {});
+        return result;
     }
 
     private static <T> Result<T, List<CompileError>> singleError(CompileError e) {
