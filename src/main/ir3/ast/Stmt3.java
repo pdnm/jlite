@@ -1,6 +1,7 @@
 package ir3.ast;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public abstract class Stmt3 implements Ir3Node {
     public static class Label extends Stmt3 {
@@ -8,6 +9,11 @@ public abstract class Stmt3 implements Ir3Node {
 
         public Label(int id) {
             this.id = id;
+        }
+
+        @Override
+        public void display(StringBuilder sb, int indent) {
+            sb.append(" ".repeat(indent)).append("Label " + id + ":\n");
         }
     }
 
@@ -19,6 +25,11 @@ public abstract class Stmt3 implements Ir3Node {
             this.cond = cond;
             this.target = target;
         }
+
+        @Override
+        public void display(StringBuilder sb, int indent) {
+            sb.append(" ".repeat(indent)).append("if (" + cond.toString() + ") Goto " + target.id +  ";\n");
+        }
     }
 
     public static class Goto extends Stmt3 {
@@ -26,6 +37,11 @@ public abstract class Stmt3 implements Ir3Node {
 
         public Goto(Label target) {
             this.target = target;
+        }
+
+        @Override
+        public void display(StringBuilder sb, int indent) {
+            sb.append(" ".repeat(indent)).append("Goto " + target.id + ";\n");
         }
     }
 
@@ -36,6 +52,11 @@ public abstract class Stmt3 implements Ir3Node {
         public Asn(Id3 lvalue, Expr3 rvalue) {
             this.lvalue = lvalue;
             this.rvalue = rvalue;
+        }
+
+        @Override
+        public void display(StringBuilder sb, int indent) {
+            sb.append(" ".repeat(indent)).append(lvalue.name + " = " + rvalue.toString() + ";\n");
         }
     }
 
@@ -49,6 +70,11 @@ public abstract class Stmt3 implements Ir3Node {
             this.field = field;
             this.rvalue = rvalue;
         }
+
+        @Override
+        public void display(StringBuilder sb, int indent) {
+            sb.append(" ".repeat(indent)).append(obj.name + "." + field.name + " = " + rvalue.toString() + ";\n");
+        }
     }
 
     public static class FnCall extends Stmt3 {
@@ -59,6 +85,12 @@ public abstract class Stmt3 implements Ir3Node {
             this.fn = fn;
             this.args = args;
         }
+
+        @Override
+        public void display(StringBuilder sb, int indent) {
+            sb.append(" ".repeat(indent))
+                    .append(fn.name + "(" + args.stream().map(Id3::toString).collect(Collectors.joining(", ")) + ");\n");
+        }
     }
 
     public static class Return extends Stmt3 {
@@ -66,6 +98,11 @@ public abstract class Stmt3 implements Ir3Node {
 
         public Return(Id3 value) {
             this.value = value;
+        }
+
+        @Override
+        public void display(StringBuilder sb, int indent) {
+            sb.append(" ".repeat(indent)).append("return " + value.name + ";\n");
         }
     }
 }

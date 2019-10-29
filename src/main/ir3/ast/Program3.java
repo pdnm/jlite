@@ -19,4 +19,23 @@ public class Program3 implements Ir3Node {
                 ListUtils.concat(p1.classes, p2.classes),
                 ListUtils.concat(p1.methods, p2.methods));
     }
+
+    @Override
+    public void display(StringBuilder sb, int indent) {
+        for (var cls : classes) {
+            cls.display(sb, indent);
+            sb.append("\n");
+        }
+        for (var method : methods) {
+            method.display(sb, indent);
+            sb.append("\n");
+        }
+    }
+
+    @Override
+    public String toString() {
+        var sb = new StringBuilder();
+        display(sb, 0);
+        return sb.toString();
+    }
 }

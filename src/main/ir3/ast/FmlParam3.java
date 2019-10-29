@@ -19,4 +19,9 @@ public class FmlParam3 {
                 .map(param -> new FmlParam3(Type3.fromType(param.type), Id3.fromId(param.name)))
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public String toString() {
+        return type.name + " " + name.name;
+    }
 }

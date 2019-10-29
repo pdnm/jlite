@@ -12,4 +12,9 @@ public class Id3 implements Ir3Node {
     public static Id3 fromId(Identifier id) {
         return new Id3(id.name);
     }
+
+    @Override
+    public String toString() {
+        return name;
+    }
 }
