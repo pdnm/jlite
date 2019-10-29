@@ -66,6 +66,47 @@ public class Translator {
         return new TranslatedStmt(tmps, stmts);
     }
 
+    TranslatedExpr translateFnCall(Context3 ctx, LocalContext lctx, Expr func, List<Expr> fnArgs) {
+        var tmps = new ArrayList<VarDecl3>();
+        var stmts = new ArrayList<Stmt3>();
+
+        var args = new ArrayList<Id3>();
+        var argTypes = fnArgs.stream().map(Expr::getType).collect(Collectors.toList());
+        Id3 fn;
+
+        if (func instanceof Expr.IdExpr) {
+            var localMethod = ctx.getId3LocalFunction(((Expr.IdExpr) func).id, argTypes);
+            if (localMethod.isPresent()) {
+                fn = localMethod.get();
+                args.add(Context3.thisId);
+            } else {
+                fn = ctx.getId3BuiltinFunction(((Expr.IdExpr) func).id, argTypes).get();
+            }
+        } else {
+            Expr.Path path = (Expr.Path) func;
+            fn = ctx.getId3Function(path.left.getType(), path.id, argTypes).get();
+            var obj = translate(ctx, lctx, path.left);
+            tmps.addAll(obj.tmps);
+            stmts.addAll(obj.stmt3s);
+            var objVar = lctx.generateTmpVar();
+            tmps.add(new VarDecl3(Type3.fromType(path.left.getType()), objVar));
+            stmts.add(new Stmt3.Asn(objVar, obj.finalExpr));
+            args.add(objVar);
+        }
+
+        for (var arg : fnArgs) {
+            var argCode = translate(ctx, lctx, arg);
+            tmps.addAll(argCode.tmps);
+            stmts.addAll(argCode.stmt3s);
+            var argVar = lctx.generateTmpVar();
+            tmps.add(new VarDecl3(Type3.fromType(arg.getType()), argVar));
+            stmts.add(new Stmt3.Asn(argVar, argCode.finalExpr));
+            args.add(argVar);
+        }
+
+        return new TranslatedExpr(tmps, stmts, new Expr3.FnCall(fn, args));
+    }
+
     TranslatedStmt translate(Context3 ctx, LocalContext lctx, Stmt stmt) {
         var tmps = new ArrayList<VarDecl3>();
         var stmts = new ArrayList<Stmt3>();
@@ -117,41 +158,11 @@ public class Translator {
                     return true;
                 },
                 fnCall -> {
-                    var args = new ArrayList<Id3>();
-                    var argTypes = fnCall.args.stream().map(Expr::getType).collect(Collectors.toList());
-                    Id3 fn;
-
-                    if (fnCall.fn instanceof Expr.IdExpr) {
-                        var localMethod = ctx.getId3LocalFunction(((Expr.IdExpr) fnCall.fn).id, argTypes);
-                        if (localMethod.isPresent()) {
-                            fn = localMethod.get();
-                            args.add(Context3.thisId);
-                        } else {
-                            fn = ctx.getId3BuiltinFunction(((Expr.IdExpr) fnCall.fn).id, argTypes).get();
-                        }
-                    } else {
-                        Expr.Path path = (Expr.Path) fnCall.fn;
-                        fn = ctx.getId3Function(path.left.getType(), path.id, argTypes).get();
-                        var obj = translate(ctx, lctx, path.left);
-                        tmps.addAll(obj.tmps);
-                        stmts.addAll(obj.stmt3s);
-                        var objVar = lctx.generateTmpVar();
-                        tmps.add(new VarDecl3(Type3.fromType(path.left.getType()), objVar));
-                        stmts.add(new Stmt3.Asn(objVar, obj.finalExpr));
-                        args.add(objVar);
-                    }
-
-                    for (var arg : fnCall.args) {
-                        var argCode = translate(ctx, lctx, arg);
-                        tmps.addAll(argCode.tmps);
-                        stmts.addAll(argCode.stmt3s);
-                        var argVar = lctx.generateTmpVar();
-                        tmps.add(new VarDecl3(Type3.fromType(arg.getType()), argVar));
-                        stmts.add(new Stmt3.Asn(argVar, argCode.finalExpr));
-                        args.add(argVar);
-                    }
-
-                    stmts.add(new Stmt3.FnCall(fn, args));
+                    var callCode = translateFnCall(ctx, lctx, fnCall.fn, fnCall.args);
+                    var fnExpr = (Expr3.FnCall) callCode.finalExpr;
+                    tmps.addAll(callCode.tmps);
+                    stmts.addAll(callCode.stmt3s);
+                    stmts.add(new Stmt3.FnCall(fnExpr.fn, fnExpr.args));
                     return true;
                 },
                 assignment -> {
@@ -241,41 +252,11 @@ public class Translator {
                 thisExpr -> new Expr3.IdExpr(Context3.thisId),
                 aNull -> new Expr3.Null(),
                 fnCall -> {
-                    var args = new ArrayList<Id3>();
-                    var argTypes = fnCall.args.stream().map(Expr::getType).collect(Collectors.toList());
-                    Id3 fn;
-
-                    if (fnCall.fn instanceof Expr.IdExpr) {
-                        var localMethod = ctx.getId3LocalFunction(((Expr.IdExpr) fnCall.fn).id, argTypes);
-                        if (localMethod.isPresent()) {
-                            fn = localMethod.get();
-                            args.add(Context3.thisId);
-                        } else {
-                            fn = ctx.getId3BuiltinFunction(((Expr.IdExpr) fnCall.fn).id, argTypes).get();
-                        }
-                    } else {
-                        Expr.Path path = (Expr.Path) fnCall.fn;
-                        fn = ctx.getId3Function(path.left.getType(), path.id, argTypes).get();
-                        var obj = translate(ctx, lctx, path.left);
-                        tmps.addAll(obj.tmps);
-                        stmts.addAll(obj.stmt3s);
-                        var objVar = lctx.generateTmpVar();
-                        tmps.add(new VarDecl3(Type3.fromType(path.left.getType()), objVar));
-                        stmts.add(new Stmt3.Asn(objVar, obj.finalExpr));
-                        args.add(objVar);
-                    }
-
-                    for (var arg : fnCall.args) {
-                        var argCode = translate(ctx, lctx, arg);
-                        tmps.addAll(argCode.tmps);
-                        stmts.addAll(argCode.stmt3s);
-                        var argVar = lctx.generateTmpVar();
-                        tmps.add(new VarDecl3(Type3.fromType(arg.getType()), argVar));
-                        stmts.add(new Stmt3.Asn(argVar, argCode.finalExpr));
-                        args.add(argVar);
-                    }
-
-                    return new Expr3.FnCall(fn, args);
+                    var callCode = translateFnCall(ctx, lctx, fnCall.fn, fnCall.args);
+                    var fnExpr = (Expr3.FnCall) callCode.finalExpr;
+                    tmps.addAll(callCode.tmps);
+                    stmts.addAll(callCode.stmt3s);
+                    return new Expr3.FnCall(fnExpr.fn, fnExpr.args));
                 },
                 path -> {
                     var leftCode = translate(ctx, lctx, path.left);

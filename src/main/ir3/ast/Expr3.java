@@ -5,8 +5,8 @@ import java.util.stream.Collectors;
 
 public abstract class Expr3 implements Ir3Node {
     public static class FnCall extends Expr3 {
-        final Id3 fn;
-        final List<Id3> args;
+        public final Id3 fn;
+        public final List<Id3> args;
 
         public FnCall(Id3 fn, List<Id3> args) {
             this.fn = fn;
