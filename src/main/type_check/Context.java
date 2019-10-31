@@ -1,4 +1,4 @@
-package static_checkers;
+package type_check;
 
 import ast.Identifier;
 import ast.Operator;
@@ -21,6 +21,7 @@ public class Context {
     static final Type boolType = new Type("Bool");
     static final Type stringType = new Type("String");
     static final Type voidType = new Type("Void");
+    static final Type nullType = new Type("Null");
 
     static class BinOpType {
         Type left, right, result;
@@ -80,7 +81,7 @@ public class Context {
     public Context(ClassDesc classDesc, Type cls) {
         this.classDesc = classDesc;
         this.typeEnv = TypeEnv.emptyEnv();
-        this.pervasive = ClassEnv.pervasive();
+        this.pervasive = ClassEnv.pervasive(classDesc.getAllClassTypes());
         this.localClass = this.classDesc.getClassEnv(cls).get();
         this.classes = new HashSet<>(this.classDesc.getAllClassTypes());
         this.types = new HashSet<>(this.classDesc.getAllClassTypes());

@@ -1,4 +1,4 @@
-package static_checkers;
+package type_check;
 
 import ast.ClassDecl;
 import ast.Identifier;
@@ -48,7 +48,7 @@ public class ClassEnv {
         return new ClassEnv(clsDecl.name, fields, methodGroups);
     }
 
-    static ClassEnv pervasive() {
+    static ClassEnv pervasive(List<Type> allClassTypes) {
         return new ClassEnv(new Type("Pervasive"), Map.of(), Map.ofEntries(
                 entry("readln",
                         List.of(new MdType(List.of(Context.intType), Context.voidType),
@@ -57,7 +57,10 @@ public class ClassEnv {
                 entry("println",
                         List.of(new MdType(List.of(Context.intType), Context.voidType),
                                 new MdType(List.of(Context.stringType), Context.voidType),
-                                new MdType(List.of(Context.boolType), Context.voidType)))
+                                new MdType(List.of(Context.boolType), Context.voidType))),
+                entry("isNull",
+                        allClassTypes.stream().map(type ->
+                                new MdType(List.of(type), Context.boolType)).collect(toList()))
         ));
     }
 

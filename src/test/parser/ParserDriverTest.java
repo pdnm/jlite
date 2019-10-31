@@ -2,7 +2,6 @@ package parser;
 
 
 import java_cup.runtime.Symbol;
-import org.junit.jupiter.api.Test;
 import parser.gen.Scanner;
 import parser.gen.sym;
 import processor.PrettyPrinter;
@@ -13,7 +12,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 class ParserDriverTest {
-    @Test
     void scannerTest() {
         try {
             var in = new FileReader("e1.j");
@@ -47,17 +45,14 @@ class ParserDriverTest {
         }
     }
 
-    @Test
     void test1() {
         prettyPrintingTest("jlite_programs/e.j");
     }
 
-    @Test
     void test2() {
         prettyPrintingTest("jlite_programs/e1.j");
     }
 
-    @Test
     void test3() {
         prettyPrintingTest("jlite_programs/sample1.j");
     }

@@ -2,10 +2,10 @@ package ir3;
 
 import ast.*;
 import ir3.ast.*;
-import static_checkers.ClassDesc;
-import static_checkers.CompileErrorExp;
-import static_checkers.Context;
-import static_checkers.MdType;
+import type_check.ClassDesc;
+import type_check.CompileErrorExp;
+import type_check.Context;
+import type_check.MdType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -126,11 +126,11 @@ public class Translator {
 
                     var thenBlock = translate(ctx, lctx, ifStmt.then);
                     var elseBlock = translate(ctx, lctx, ifStmt.alt);
+                    tmps.addAll(thenBlock.tmps);
                     tmps.addAll(elseBlock.tmps);
                     stmts.addAll(elseBlock.stmt3s);
                     stmts.add(new Stmt3.Goto(l2));
                     stmts.add(l1);
-                    tmps.addAll(thenBlock.tmps);
                     stmts.addAll(thenBlock.stmt3s);
                     stmts.add(l2);
                     return true;
@@ -256,7 +256,7 @@ public class Translator {
                     var fnExpr = (Expr3.FnCall) callCode.finalExpr;
                     tmps.addAll(callCode.tmps);
                     stmts.addAll(callCode.stmt3s);
-                    return new Expr3.FnCall(fnExpr.fn, fnExpr.args));
+                    return new Expr3.FnCall(fnExpr.fn, fnExpr.args);
                 },
                 path -> {
                     var leftCode = translate(ctx, lctx, path.left);

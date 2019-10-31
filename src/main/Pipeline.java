@@ -2,7 +2,7 @@ import ast.Program;
 import ir3.Translator;
 import ir3.ast.Program3;
 import parser.ParserDriver;
-import static_checkers.TypeChecker;
+import type_check.TypeChecker;
 
 import java.io.Reader;
 

@@ -14,6 +14,7 @@ public class Type implements AstNode {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Type type = (Type) o;
+        if (this.name.equals("Null") || type.name.equals("null")) return true;
         return name.equals(type.name);
     }
 

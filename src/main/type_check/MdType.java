@@ -1,4 +1,4 @@
-package static_checkers;
+package type_check;
 
 import ast.MdDecl;
 import ast.Type;

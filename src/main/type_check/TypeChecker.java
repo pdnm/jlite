@@ -1,4 +1,4 @@
-package static_checkers;
+package type_check;
 
 import ast.*;
 import utils.ListUtils;
@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static utils.Result.*;
-import static static_checkers.CompileError.*;
+import static type_check.CompileError.*;
 
 public class TypeChecker {
     public static List<CompileError> check(Program program) {

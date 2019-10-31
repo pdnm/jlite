@@ -4,11 +4,10 @@ import ast.Identifier;
 import ast.Type;
 import ir3.ast.Id3;
 import ir3.ast.Type3;
-import static_checkers.ClassEnv;
-import static_checkers.Context;
+import type_check.ClassEnv;
+import type_check.Context;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 public class Context3 {
