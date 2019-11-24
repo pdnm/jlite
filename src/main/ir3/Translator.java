@@ -222,15 +222,32 @@ public class Translator {
                     var rightCode = translate(ctx, lctx, binOp.right);
                     tmps.addAll(leftCode.tmps);
                     tmps.addAll(rightCode.tmps);
-                    stmts.addAll(leftCode.stmt3s);
-                    stmts.addAll(rightCode.stmt3s);
                     var leftVar = lctx.generateTmpVar();
-                    var rightVar = lctx.generateTmpVar();
                     tmps.add(new VarDecl3(Type3.fromType(binOp.left.getType()), leftVar));
-                    tmps.add(new VarDecl3(Type3.fromType(binOp.right.getType()), rightVar));
+
+                    stmts.addAll(leftCode.stmt3s);
                     stmts.add(new Stmt3.Asn(leftVar, leftCode.finalExpr));
-                    stmts.add(new Stmt3.Asn(rightVar, rightCode.finalExpr));
-                    return new Expr3.FnCall(new Id3(binOp.op.symbol), List.of(leftVar, rightVar));
+                    if (binOp.op == Operator.AND || binOp.op == Operator.OR) { // Short-circuit
+                        var cond = leftVar;
+                        if (binOp.op == Operator.AND) {
+                            var negate = lctx.generateTmpVar();
+                            tmps.add(new VarDecl3(Type3.fromType(binOp.left.getType()), negate));
+                            stmts.add(new Stmt3.Asn(negate, new Expr3.UnOp(Operator.NEG, leftVar)));
+                            cond = negate;
+                        }
+                        var l1 = lctx.generateLabel();
+                        stmts.add(new Stmt3.If(cond, l1));
+                        stmts.addAll(rightCode.stmt3s);
+                        stmts.add(new Stmt3.Asn(leftVar, rightCode.finalExpr));
+                        stmts.add(l1);
+                        return new Expr3.IdExpr(leftVar);
+                    } else {
+                        var rightVar = lctx.generateTmpVar();
+                        tmps.add(new VarDecl3(Type3.fromType(binOp.right.getType()), rightVar));
+                        stmts.addAll(rightCode.stmt3s);
+                        stmts.add(new Stmt3.Asn(rightVar, rightCode.finalExpr));
+                        return new Expr3.BinOp(binOp.op, leftVar, rightVar);
+                    }
                 },
                 unOp -> {
                     var operandCode = translate(ctx, lctx, unOp.expr);
@@ -239,7 +256,7 @@ public class Translator {
                     var operandVar = lctx.generateTmpVar();
                     tmps.add(new VarDecl3(Type3.fromType(unOp.expr.getType()), operandVar));
                     stmts.add(new Stmt3.Asn(operandVar, operandCode.finalExpr));
-                    return new Expr3.FnCall(new Id3(unOp.op.symbol), List.of(operandVar));
+                    return new Expr3.UnOp(unOp.op, operandVar);
                 },
                 idExpr -> {
                     if (idExpr.id.isFromLocalScope()) {

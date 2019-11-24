@@ -1,9 +1,33 @@
 package ir3.ast;
 
+import ast.Operator;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
 public abstract class Expr3 implements Ir3Node {
+    public static class BinOp extends Expr3 {
+        public final Operator op;
+        public final Id3 left;
+        public final Id3 right;
+
+        public BinOp(Operator op, Id3 left, Id3 right) {
+            this.op = op;
+            this.left = left;
+            this.right = right;
+        }
+    }
+
+    public static class UnOp extends Expr3 {
+        public final Operator op;
+        public final Id3 operand;
+
+        public UnOp(Operator op, Id3 operand) {
+            this.op = op;
+            this.operand = operand;
+        }
+    }
+
     public static class FnCall extends Expr3 {
         public final Id3 fn;
         public final List<Id3> args;
