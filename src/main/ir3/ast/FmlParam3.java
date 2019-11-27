@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class FmlParam3 {
-    final Type3 type;
-    final Id3 name;
+    public final Type3 type;
+    public final Id3 name;
 
     public FmlParam3(Type3 type, Id3 name) {
         this.type = type;

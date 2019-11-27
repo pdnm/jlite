@@ -12,9 +12,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 class ParserDriverTest {
-    void scannerTest() {
+    void scannerTest(String filename) {
         try {
-            var in = new FileReader("e1.j");
+            var in = new FileReader(filename);
             var sc = new Scanner(in);
             var symbols = new ArrayList<>();
             while (true) {
@@ -46,14 +46,10 @@ class ParserDriverTest {
     }
 
     void test1() {
-        prettyPrintingTest("jlite_programs/e.j");
+        prettyPrintingTest("testcases/sample1.j");
     }
 
     void test2() {
-        prettyPrintingTest("jlite_programs/e1.j");
-    }
-
-    void test3() {
-        prettyPrintingTest("jlite_programs/sample1.j");
+        prettyPrintingTest("testcases/sample5.j");
     }
 }

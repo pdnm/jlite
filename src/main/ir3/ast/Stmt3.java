@@ -1,11 +1,15 @@
 package ir3.ast;
 
+import ast.AstNode;
+
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public abstract class Stmt3 implements Ir3Node {
     public static class Label extends Stmt3 {
-        final int id;
+        public final int id;
 
         public Label(int id) {
             this.id = id;
@@ -18,8 +22,8 @@ public abstract class Stmt3 implements Ir3Node {
     }
 
     public static class If extends Stmt3 {
-        final Id3 cond;
-        final Label target;
+        public final Id3 cond;
+        public final Label target;
 
         public If(Id3 cond, Label target) {
             this.cond = cond;
@@ -33,7 +37,7 @@ public abstract class Stmt3 implements Ir3Node {
     }
 
     public static class Goto extends Stmt3 {
-        final Label target;
+        public final Label target;
 
         public Goto(Label target) {
             this.target = target;
@@ -46,8 +50,8 @@ public abstract class Stmt3 implements Ir3Node {
     }
 
     public static class Asn extends Stmt3 {
-        final Id3 lvalue;
-        final Expr3 rvalue;
+        public final Id3 lvalue;
+        public final Expr3 rvalue;
 
         public Asn(Id3 lvalue, Expr3 rvalue) {
             this.lvalue = lvalue;
@@ -58,12 +62,26 @@ public abstract class Stmt3 implements Ir3Node {
         public void display(StringBuilder sb, int indent) {
             sb.append(" ".repeat(indent)).append(lvalue.name + " = " + rvalue.toString() + ";\n");
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Asn asn = (Asn) o;
+            return lvalue.equals(asn.lvalue) &&
+                    rvalue.equals(asn.rvalue);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(lvalue, rvalue);
+        }
     }
 
     public static class FdAsn extends Stmt3 {
-        final Id3 obj;
-        final Id3 field;
-        final Expr3 rvalue;
+        public final Id3 obj;
+        public final Id3 field;
+        public final Expr3 rvalue;
 
         public FdAsn(Id3 obj, Id3 field, Expr3 rvalue) {
             this.obj = obj;
@@ -78,8 +96,8 @@ public abstract class Stmt3 implements Ir3Node {
     }
 
     public static class FnCall extends Stmt3 {
-        final Id3 fn;
-        final List<Id3> args;
+        public final Id3 fn;
+        public final List<Id3> args;
 
         public FnCall(Id3 fn, List<Id3> args) {
             this.fn = fn;
@@ -94,7 +112,7 @@ public abstract class Stmt3 implements Ir3Node {
     }
 
     public static class Return extends Stmt3 {
-        final Id3 value;
+        public final Id3 value;
 
         public Return(Id3 value) {
             this.value = value;
@@ -104,5 +122,21 @@ public abstract class Stmt3 implements Ir3Node {
         public void display(StringBuilder sb, int indent) {
             sb.append(" ".repeat(indent)).append("return " + value.name + ";\n");
         }
+    }
+
+    public <T> T process(Function<Label, T> labelTFunction,
+                         Function<If, T> ifTFunction,
+                         Function<Goto, T> gotoTFunction,
+                         Function<Asn, T> asnTFunction,
+                         Function<FdAsn, T> fdAsnTFunction,
+                         Function<FnCall, T> fnCallTFunction,
+                         Function<Return, T> returnTFunction) {
+        if (this instanceof Label) return labelTFunction.apply((Label) this);
+        else if (this instanceof If) return ifTFunction.apply((If) this);
+        else if (this instanceof Goto) return gotoTFunction.apply((Goto) this);
+        else if (this instanceof Asn) return asnTFunction.apply((Asn) this);
+        else if (this instanceof FdAsn) return fdAsnTFunction.apply((FdAsn) this);
+        else if (this instanceof FnCall) return fnCallTFunction.apply((FnCall) this);
+        else return returnTFunction.apply((Return) this);
     }
 }

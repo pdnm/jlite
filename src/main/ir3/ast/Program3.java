@@ -6,8 +6,8 @@ import utils.ListUtils;
 import java.util.List;
 
 public class Program3 implements Ir3Node {
-    final List<CData3> classes;
-    final List<CMtd3> methods;
+    public final List<CData3> classes;
+    public final List<CMtd3> methods;
 
     public Program3(List<CData3> classes, List<CMtd3> methods) {
         this.classes = classes;

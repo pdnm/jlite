@@ -1,10 +1,14 @@
 import ast.Program;
+import backend.ArmISA;
+import backend.ArmTranslator;
 import ir3.Translator;
 import ir3.ast.Program3;
 import parser.ParserDriver;
 import type_check.TypeChecker;
 
 import java.io.Reader;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class Pipeline {
     private static Program parse(Reader source) {
@@ -40,5 +44,15 @@ public class Pipeline {
         }
 
         return new Translator().translate(program);
+    }
+
+    static List<ArmISA.Instr> compileArm(Reader source) {
+        Program3 program3 = ir3Gen(source);
+        var translator = new ArmTranslator(4, 4, 4, 8, 11, 13, 14, 15);
+        var instructions = translator.translate(program3);
+        return instructions.stream().filter(instr ->
+                   !(instr instanceof ArmISA.Push && ((ArmISA.Push) instr).registers.isEmpty())
+                && !(instr instanceof ArmISA.Pop &&  ((ArmISA.Pop)  instr).registers.isEmpty())
+        ).collect(Collectors.toList());
     }
 }

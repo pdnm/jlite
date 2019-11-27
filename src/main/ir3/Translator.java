@@ -31,11 +31,11 @@ public class Translator {
     Program3 translate(Context3 ctx, ClassDecl cls) {
         var cdata = new CData3(Type3.fromType(cls.name),
                 cls.vars.stream().map(VarDecl3::fromVarDecl).collect(Collectors.toList()));
-        var methods = cls.mds.stream().map(md -> translate(ctx, md)).collect(Collectors.toList());
+        var methods = cls.mds.stream().map(md -> translate(ctx, cdata, md)).collect(Collectors.toList());
         return new Program3(List.of(cdata), methods);
     }
 
-    CMtd3 translate(Context3 ctx, MdDecl md) {
+    CMtd3 translate(Context3 ctx, CData3 cdata, MdDecl md) {
         var lctx = new LocalContext();
         var vars = md.vars.stream().map(VarDecl3::fromVarDecl).collect(Collectors.toList());
         var stmt3s = new ArrayList<Stmt3>();
@@ -46,11 +46,14 @@ public class Translator {
             stmt3s.addAll(res.stmt3s);
         }
 
+        var params = new ArrayList<FmlParam3>();
+        params.add(new FmlParam3(cdata.cname, new Id3("this")));
+        params.addAll(FmlParam3.fromFmlParams(md.params));
         var body = new MdBody3(vars, stmt3s);
         return new CMtd3(
                 Type3.fromType(md.rtype),
                 ctx.getId3LocalFunction(md.name, new MdType(md).argTypes).get(),
-                FmlParam3.fromFmlParams(md.params),
+                params,
                 body);
     }
 
@@ -153,6 +156,7 @@ public class Translator {
                     var body = translate(ctx, lctx, whileStmt.block);
                     tmps.addAll(body.tmps);
                     stmts.addAll(body.stmt3s);
+                    stmts.add(new Stmt3.Goto(l1));
                     stmts.add(l3);
 
                     return true;
@@ -202,7 +206,9 @@ public class Translator {
                     return true;
                 },
                 returnVoid -> {
-                    stmts.add(new Stmt3.Return(Context3.voidId));
+                    var tmpVar = lctx.generateTmpVar();
+                    tmps.add(new VarDecl3(new Type3("Int"), tmpVar));
+                    stmts.add(new Stmt3.Return(tmpVar));
                     return true;
                 }
         );
@@ -278,6 +284,8 @@ public class Translator {
                 path -> {
                     var leftCode = translate(ctx, lctx, path.left);
                     var tmpVar = lctx.generateTmpVar();
+                    tmps.addAll(leftCode.tmps);
+                    stmts.addAll(leftCode.stmt3s);
                     tmps.add(new VarDecl3(Type3.fromType(path.left.getType()), tmpVar));
                     stmts.add(new Stmt3.Asn(tmpVar, leftCode.finalExpr));
                     return new Expr3.FieldAccess(tmpVar, Id3.fromId(path.id));

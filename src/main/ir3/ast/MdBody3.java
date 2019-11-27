@@ -3,8 +3,8 @@ package ir3.ast;
 import java.util.List;
 
 public class MdBody3 implements Ir3Node {
-    final List<VarDecl3> vars;
-    final List<Stmt3> stmts;
+    public final List<VarDecl3> vars;
+    public final List<Stmt3> stmts;
 
     public MdBody3(List<VarDecl3> vars, List<Stmt3> stmts) {
         this.vars = vars;

@@ -22,6 +22,7 @@ public class Context3 {
     }
 
     private static Optional<Id3> getId3Function(ClassEnv cls, Identifier name, List<Type> argTypes) {
+        if (name.name.equals("main")) return Optional.of(Id3.fromId(name));
         if (cls.getMethodReturnType(name, argTypes).isEmpty())
             return Optional.empty();
         var position = cls.getMethodOverloadPosition(name, argTypes);
